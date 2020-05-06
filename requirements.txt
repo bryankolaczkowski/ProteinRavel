@@ -1,0 +1,6 @@
+Python Packages:
+  modeller >= 9.24
+  dendropy >=4.4.0
+Executables:
+  mafft >= v7.453 (2019/Nov/8)
+  raxml-ng >= 0.9.0coarse

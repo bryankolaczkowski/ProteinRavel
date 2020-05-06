@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+
+################################################################################
+# protein family characterization using ancestral reconstruction, structural
+# modeling and structural-functional mapping
+#
+# (C) 2020 Bryan Kolaczkowski, University of Florida, Gainesville, FL USA
+# Released under GNU General Public License (GPL)
+# bryank@ufl.edu
+################################################################################
+
+# he he :) - get path to this running file to import the proteinRavel module
+import os
+libpath = os.path.normpath(                                                   \
+            os.path.join(                                                     \
+                os.path.dirname(os.path.abspath(os.path.realpath(__file__))), \
+                '..')                                                         \
+            )
+import sys
+sys.path.append(libpath)
+
+import collections
+import multiprocessing
+import argparse
+import distutils.util
+
+from proteinRavel._version import __version__
+from proteinRavel.align    import structalign
+from proteinRavel.tree     import mltree
+from proteinRavel.asr      import asr
+
+################################################################################
+# BEG MAIN
+
+if __name__ == '__main__':
+    # parse command-line arguments
+    parser = argparse.ArgumentParser(description='(un)ravels a protein family.',
+                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    # general options
+    parser.add_argument('--version', action='version', version=__version__)
+    parser.add_argument('-v', '--verbose', type=distutils.util.strtobool,
+                        dest='verbose',
+                        help='show runtime information on stdout',
+                        metavar='y|n')
+    parser.add_argument('-t', '--threads', type=int, dest='threads',
+                        help='set number of execution threads to N (0 to use all)',
+                        metavar='N')
+    parser.add_argument('-p', '--prefix', dest='fnameprefix',
+                        help='set output file name prefix to PRE',
+                        metavar='PRE')
+    parser.set_defaults(verbose=True,
+                        threads=0,
+                        fnameprefix='ravel-')
+    # use subparsers for each analysis step
+    subparsers = parser.add_subparsers(title='subcommands', dest='subcommand',
+                                       description='run an analysis step',
+                                       help='available analysis steps')
+
+    # alignment subparser
+    alnp = subparsers.add_parser('align', help='align sequences and structures',
+                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    alnp.add_argument('-s', '--sequences', dest='seqfname',
+                      help='set FASTA sequence file name to NAME',
+                      metavar='NAME', required=True)
+    alnp.add_argument('-x', '--structures', dest='strfnames', nargs='+',
+                      help='set PDB structure file names to NAME...',
+                      metavar='NAME', required=True)
+    alnp.add_argument('--trim', type=distutils.util.strtobool, dest='alntrim',
+                      help='trim ends of sequence alignment to match structure alignment',
+                      metavar='y|n')
+    alnp.add_argument('--maxindel', type=int, dest='maxindel',
+                      help='set largest allowable indel to size N (-1 turns off indel filtering)',
+                      metavar='N')
+    alnp.set_defaults(seqfname=None,
+                      strfnames=None,
+                      alntrim=True,
+                      maxindel=8)
+    # tree subparser
+    treep = subparsers.add_parser('tree', help='infer phylogenetic trees',
+                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    treep.add_argument('-a', '--alignment', dest='seqalnfname',
+                       help='set FASTA sequence alignment file name to NAME',
+                       metavar='NAME', required=True)
+    treep.add_argument('-m', '--model', dest='phymodel',
+                       help='set phylogenetic model to MOD',
+                       metavar='MOD')
+    treep.add_argument('-b', '--bootstrap', type=int, dest='bootstraps',
+                       help='set number of bootstrap pseudoreplicates to N',
+                       metavar='N', choices=range(10,10001))
+    treep.add_argument('--bootmetric', dest='bootmetric',
+                       help='set bootstrap metric',
+                       metavar='fbp|tbe', choices=('fbp','tbe'))
+    treep.set_defaults(seqalnfname=None,
+                       phymodel='LG+G8+F',
+                       bootstraps=200,
+                       bootmetric='tbe')
+    # asr subparser
+    asrp = subparsers.add_parser('asr', help='reconstruct ancestral sequences',
+                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    asrp.add_argument('-a', '--alignment', dest='seqalnfname',
+                      help='set FASTA sequence alignment file name to NAME',
+                      metavar='NAME', required=True)
+    asrp.add_argument('-t', '--tree', dest='seqtrefname',
+                      help='set Newick phylogenetic tree file name to NAME',
+                      metavar='NAME', required=True)
+    asrp.add_argument('-m', '--model', dest='phymodel',
+                      help='set phylogenetic model to MOD',
+                      metavar='MOD')
+    asrp.add_argument('-c', '--consensus', type=int, dest='consensus',
+                      help='set majority-rule consensus cutoff to N%%',
+                      metavar='N', choices=range(50,101))
+    asrp.set_defaults(seqalnfname=None,
+                      seqtrefname=None,
+                      phymodel='LG+G8+F',
+                      consensus=80)
+
+    # smodel subparser
+    smodelp = subparsers.add_parser('smodel', help='model structures',
+                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    smodelp.add_argument()
+    smodelp.add_argument()
+    smodelp.set_defaults()
+
+    # parse general arguments
+    args = parser.parse_args()
+    verbose = args.verbose
+    n_threads = args.threads
+    if n_threads <= 0:
+        n_threads = multiprocessing.cpu_count()
+    outfprefix = args.fnameprefix
+
+    # subcommands
+    subcommand = args.subcommand
+    if subcommand == 'align':
+        # set up alignment input files
+        seqfname  = args.seqfname
+        strfnames = collections.OrderedDict()
+        for fname in args.strfnames:
+            id = fname.split(os.path.sep)[-1].split('.')[0]
+            strfnames[id] = fname
+
+        # set up alignment processing
+        aln_trim     = args.alntrim
+        aln_filter   = True
+        aln_maxindel = args.maxindel
+        if aln_maxindel < 0:
+            aln_filter   = False
+            aln_maxindel = 0
+
+        # structure-guided alignment
+        seqaln, straln = structalign(seqfname, strfnames,
+                         trim=aln_trim, filter=aln_filter,
+                         maxindel=aln_maxindel,
+                         threads=n_threads, verbose=verbose)
+        seqalnfname = outfprefix + 'seqaln.fasta'
+        stralnfname = outfprefix + 'straln.ali'
+        with open(seqalnfname, 'w') as handle:
+            handle.write(seqaln.FASTA())
+        with open(stralnfname, 'w') as handle:
+            handle.write(straln.PIR())
+
+    elif subcommand == 'tree':
+        # set up tree inference
+        seqalnfname = args.seqalnfname
+        phymodel    = args.phymodel
+        bootstraps  = args.bootstraps
+        boot_metric = args.bootmetric
+
+        # maximum-likelihood phylogeny inference
+        seqtree = mltree(seqalnfname, model=phymodel,
+                         bootstraps=bootstraps, boot_metric=boot_metric,
+                         threads=n_threads, verbose=verbose)
+
+        mltreefname = outfprefix + 'seqaln.tre'
+        with open(mltreefname, 'w') as handle:
+            handle.write('{}\n'.format(seqtree))
+
+    elif subcommand == 'asr':
+        # set up ASR inference
+        seqalnfname = args.seqalnfname
+        seqtrefname = args.seqtrefname
+        phymodel    = args.phymodel
+        consensus   = args.consensus
+
+        # ancestral sequence reconstruction
+        tree, ancseqs = asr(seqalnfname, seqtrefname,
+                            model=phymodel, consensus=consensus,
+                            threads=n_threads, verbose=verbose)
+
+        # write ancestral sequence report to file
+        asrtreefname = outfprefix + 'seqaln.asr.tre'
+        tree.write(path=asrtreefname, schema='newick', unquoted_underscores=True)
+
+        asrseqfname = outfprefix + 'seqaln.asr.seqs'
+        with open(asrseqfname, 'w') as handle:
+            for ancseq in ancseqs.values():
+                handle.write(ancseq.brier())
+
+    elif subcommand == 'smodel':
+        # set up structural model inference
+        print(args)
+
+    sys.exit(0)
+
+# END MAIN
+################################################################################
