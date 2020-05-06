@@ -11,6 +11,7 @@ import os
 import glob
 import tempfile
 import multiprocessing
+import functools
 import modeller
 import modeller.automodel
 
@@ -38,8 +39,8 @@ class StructmodelError(Exception):
 ################################################################################
 # BEG HELPER FUNCTION DEFINITIONS
 
-def _build_models(seq_rep_list, structfname, basedir, nmodels, refstructure,
-                  verbose):
+def _build_models(structfname, basedir, nmodels, refstructure, verbose,
+                  seq_rep_list):
     """
     Builds replicate structural models of a list of protein sequences.
 
@@ -217,9 +218,15 @@ def structmodel(ext_seqfname, anc_seqfname, struct_fname, smodel_dirname,
     aln = proteinRavel.align.Alignment(ext_seqfname)
 
     # build replicate models for each extant sequence
+    seq_rep_list = []
     for sequence in aln.sequencelist:
-        _build_models([(sequence,replicates)], struct_fname, basedir,
-                      nmodels, refstructure, verbose)
+        seq_rep_list.append([[sequence,replicates]])
+
+    with multiprocessing.Pool(threads) as threadpool:
+        targetfn = functools.partial(_build_models, struct_fname, basedir,
+                                                    nmodels, refstructure,
+                                                    verbose)
+        threadpool.map(targetfn, seq_rep_list)
 
     if verbose:
         sys.stdout.write('END Extant Protein Modeling\n')
