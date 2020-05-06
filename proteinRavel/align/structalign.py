@@ -284,7 +284,7 @@ class Alignment(Sequence):
     def removeColumns(self, columns):
         """Removes a list of column indices from this alignment."""
         self.length = self.length - len(columns)
-        for col in columns:
+        for col in sorted(columns, reverse=True):
             for seq in self.sequencelist:
                 seq.sequence = seq.sequence[:col] + seq.sequence[col+1:]
         return

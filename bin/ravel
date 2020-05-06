@@ -28,6 +28,7 @@ from proteinRavel._version import __version__
 from proteinRavel.align    import structalign
 from proteinRavel.tree     import mltree
 from proteinRavel.asr      import asr
+from proteinRavel.struct   import structmodel
 
 ################################################################################
 # BEG MAIN
@@ -117,9 +118,34 @@ if __name__ == '__main__':
     # smodel subparser
     smodelp = subparsers.add_parser('smodel', help='model structures',
                          formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    smodelp.add_argument()
-    smodelp.add_argument()
-    smodelp.set_defaults()
+    smodelp.add_argument('-s', '--sequences', dest='ext_seqfname',
+                         help='set aligned extant sequences FASTA file name to NAME',
+                         metavar='NAME', required=True)
+    smodelp.add_argument('-a', '--ancestral', dest='anc_seqfname',
+                         help='set ancestral sequences .asr.seqs file name to NAME',
+                         metavar='NAME', required=True)
+    smodelp.add_argument('-x', '--structures', dest='struct_fname',
+                         help='set structure alignment PIR file name to NAME',
+                         metavar='NAME', required=True)
+    smodelp.add_argument('-r', '--replicates', type=int, dest='replicates',
+                         help='set number of modeling replicates to NUM',
+                         metavar='NUM')
+    smodelp.add_argument('-p', '--probcutoff', type=float, dest='probcutoff',
+                         help='set ancestral state probability cutoff to NUM',
+                         metavar='NUM')
+    smodelp.add_argument('-m', '--models', type=int, dest='nmodels',
+                         help='set number of initial models built to NUM',
+                         metavar='NUM')
+    smodelp.add_argument('--refstructure', dest='refstructure',
+                         help='map structure models to reference structure ID (default chooses the first structure in the -x alignment)',
+                         metavar='ID')
+    smodelp.set_defaults(ext_seqfname=None,
+                         anc_seqfname=None,
+                         struct_fname=None,
+                         replicates=5,
+                         probcutoff=0.2,
+                         nmodels=20,
+                         refstructure=None)
 
     # parse general arguments
     args = parser.parse_args()
@@ -198,7 +224,23 @@ if __name__ == '__main__':
 
     elif subcommand == 'smodel':
         # set up structural model inference
-        print(args)
+        smodel_dirname = outfprefix + 'smodels'
+        if not os.path.isdir(smodel_dirname):
+            os.makedirs(smodel_dirname)
+        ext_seqfname = args.ext_seqfname
+        anc_seqfname = args.anc_seqfname
+        struct_fname = args.struct_fname
+        replicates   = args.replicates
+        nmodels      = args.nmodels
+        probcutoff   = args.probcutoff
+        refstructure = args.refstructure
+
+        # structural modeling
+        structmodel(ext_seqfname, anc_seqfname, struct_fname, smodel_dirname,
+                    replicates=replicates, nmodels=nmodels,
+                    probcutoff=probcutoff, refstructure=refstructure,
+                    threads=n_threads, verbose=verbose)
+
 
     sys.exit(0)
 
