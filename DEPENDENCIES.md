@@ -2,7 +2,7 @@
 
 ProteinRavel uses a few non-standard Python3 packages, as well as a few third-party applications that execute various parts of the analysis pipeline.
 
-To run ProteinRavel analyses, you will need the following Python3 packages available.
+To run ProteinRavel analyses, you will need the following Python3 packages and third-party applications available. In addition, all required third-party applications must be in your executable PATH.
 
 ## Python3 Packages
 
@@ -30,4 +30,3 @@ Dendropy is a Python3 package for reading, manipulating and writing phylogenetic
   "charmm": "^44b2"
 
   "pdb2pqr": "^2.1.1"
-  
