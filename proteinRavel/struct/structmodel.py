@@ -9,6 +9,7 @@
 import sys
 import os
 import glob
+import random
 import tempfile
 import multiprocessing
 import functools
@@ -33,6 +34,78 @@ class StructmodelError(Exception):
     """Exceptions raised when structural modeling has an issue."""
     pass
 
+class UncertainSequence(object):
+    """Protein sequence with uncertain residues/gaps."""
+
+    seq_id_tag = '>'
+
+    def _process_asr_line(self, line, probcutoff):
+        """processes a single ancestral sequence position"""
+        sequence = []
+        weights  = []
+        linearr = line.split()
+        myseq = [ x for x in linearr[1] ]
+        mywts = [ float(x) for x in linearr[2].split(',') ]
+        sequence.append(myseq[0])
+        weights.append(mywts[0])
+        for i in range(1,len(myseq)):
+            if mywts[i] >= probcutoff:
+                sequence.append(myseq[i])
+                weights.append(mywts[i])
+        wtsum = sum(weights)
+        for i in range(len(weights)):
+            weights[i] /= wtsum
+        return (sequence,weights)
+
+    def __init__(self, asrfilename, id, probcutoff=0.2):
+        """Initialize a new UncertainSequence object"""
+        self.identifier = id
+        self.sequence   = []
+        self.weights    = []
+        with open(asrfilename, 'r') as handle:
+            line = handle.readline()
+            while line:
+                if line[0] == self.seq_id_tag:
+                    myid = line[1:].strip()
+                    if myid == id:
+                        line = handle.readline()
+                        while line and line[0] != self.seq_id_tag:
+                            seq,wts = self._process_asr_line(line, probcutoff)
+                            self.sequence.append(seq)
+                            self.weights.append(wts)
+                            line = handle.readline()
+                    else:
+                        line = handle.readline()
+                else:
+                    line = handle.readline()
+        return
+
+    def _get_sequence(self):
+        """produce a random draw from this uncertain sequence"""
+        seq = ''
+        for i in range(len(self.sequence)):
+            seqarr = self.sequence[i]
+            wgtarr = self.weights[i]
+            seq += random.choices(seqarr, weights=wgtarr)[0]
+        return proteinRavel.align.Sequence(self.identifier, seq)
+
+    def getSequences(self, count):
+        """
+        Produce a list of (sequenc,replicate) pairs probabilistically.
+
+        total number of replicates should be count.
+        """
+        sequences  = []
+        for rep in range(count):
+            myseq = self._get_sequence()
+            seqs  = [ x[0] for x in sequences ]
+            if myseq in seqs:
+                sequences[seqs.index(myseq)][1] += 1
+            else:
+                sequences.append([myseq,1])
+        return sequences
+
+
 # END CLASS DEFINITIONS
 ################################################################################
 
@@ -56,7 +129,23 @@ def _build_models(structfname, basedir, nmodels, refstructure, verbose,
     structfname = os.path.normpath(os.path.join(workingdir, structfname))
     basedir     = os.path.normpath(os.path.join(workingdir, basedir))
 
+    # calculate total number of reps for each sequence id
+    reps_per_id = {}
     for seq,reps in seq_rep_list:
+        if seq.identifier in reps_per_id.keys():
+            reps_per_id[seq.identifier] += reps
+        else:
+            reps_per_id[seq.identifier] = reps
+
+    for seq,reps in seq_rep_list:
+        # calculate some information on total reps for this id and how many
+        # models to build for this particular sequence
+        total_reps_needed = reps_per_id[seq.identifier]
+        models_per_rep    = round(nmodels / total_reps_needed)
+        if models_per_rep < 1:
+            models_per_rep = 1
+        mynmodels = models_per_rep * reps
+
         # check this sequence's existing structures; bail out if done
         mindex = 1
         outdir = basedir + os.path.sep + seq.identifier
@@ -70,7 +159,7 @@ def _build_models(structfname, basedir, nmodels, refstructure, verbose,
             if existing_reps:
                 existing_reps.sort(reverse=True)
                 last_rep = existing_reps[0]
-                if last_rep < reps:
+                if last_rep < total_reps_needed:
                     mindex = existing_reps[0] + 1
                 else:
                     continue
@@ -107,8 +196,8 @@ def _build_models(structfname, basedir, nmodels, refstructure, verbose,
                                                   knowns=knowns,
                                                   sequence=seq.identifier,
                                                   assess_methods=ASSESS_METHODS)
-            a.starting_model = 1        # index of the first model
-            a.ending_model   = nmodels  # index of the last model
+            a.starting_model = 1          # index of the first model
+            a.ending_model   = mynmodels  # index of the last model
             # adjust optimization parameters
             a.library_schedule = modeller.automodel.autosched.slow
             a.md_level         = modeller.automodel.refine.slow
@@ -239,6 +328,27 @@ def structmodel(ext_seqfname, anc_seqfname, struct_fname, smodel_dirname,
     basedir = smodel_dirname + os.path.sep + 'ancestral'
     if not os.path.isdir(basedir):
         os.makedirs(basedir)
+
+    # read ancestral sequence ids
+    anc_seq_ids = []
+    with open(anc_seqfname, 'r') as handle:
+        for line in handle:
+            if line[0] == '>':
+                anc_seq_ids.append(line[1:].strip())
+
+    # generate sequences
+    seq_rep_list = []
+    for anc_seq_id in anc_seq_ids:
+        seqs = UncertainSequence(anc_seqfname,
+                                 anc_seq_id,
+                                 probcutoff=probcutoff).getSequences(replicates)
+        seq_rep_list.append(seqs)
+
+    with multiprocessing.Pool(threads) as threadpool:
+        targetfn = functools.partial(_build_models, struct_fname, basedir,
+                                                    nmodels, refstructure,
+                                                    verbose)
+        threadpool.map(targetfn, seq_rep_list)
 
     if verbose:
         sys.stdout.write('END Ancestral Protein Modeling\n')

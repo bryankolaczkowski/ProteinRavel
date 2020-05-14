@@ -67,6 +67,17 @@ class Sequence(object):
         """Length of the amino-acid sequence, including gaps."""
         return len(self.sequence)
 
+    def __eq__(self, other):
+        """Sequences are equivalent if they have the same ID and sequence"""
+        if self.identifier == other.identifier \
+        and self.sequence == other.sequence:
+            return True
+        return False
+
+    def __ne__(self, other):
+        """sequences are not equivalent if they are... not... equivalent :)"""
+        return not self.__eq__(other)
+
     def FASTA(self):
         """Sequence as a FASTA-formatted string."""
         return self.idprefix + self.identifier + '\n' + \
