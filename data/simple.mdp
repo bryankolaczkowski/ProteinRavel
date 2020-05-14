@@ -1,0 +1,15 @@
+;
+
+constraints     = none
+continuation    = yes
+integrator      = md
+nsteps          = 0
+
+dt              = 0.001
+
+nstcomm         = 0
+coulombtype     = cutoff
+pbc             = xyz
+Tcoupl          = no
+Pcoupl          = no
+gen_vel         = no

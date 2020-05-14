@@ -1,0 +1,72 @@
+####     DEFINITION FILE FOR STANDARD FRAGMAPS     ####
+#
+# This file defines standard fragmaps. It follows a
+# fragmap definition format with the following entries:
+#
+# DEF MOLECULE name LABEL
+#    This line defines a molecule entry, where 'name'
+#    is the base name of .itp and .pdb files defining
+#    the force-field and structure of the molecule, and
+#    'LABEL' is the molecular label used to name the
+#    molecule in structure files.
+#
+# DEF SELECTION name MOL_LABEL L1 [L2...]
+#    This line defines an atom selection entry, where
+#    'name' is the name of this selection, 'MOL_LABEL'
+#    is the 'LABEL' entry of a MOLECULE definition, and
+#    'L1' ... are the specific atoms that are part of
+#    this selection.
+#
+# DEF FRAGMAP name S1 [S2...]
+#    This line defines a fragmap entry, where 'name'
+#    is the name of this fragmap, and 'S1' ... are the
+#    atom selection names that make up members of this
+#    fagmap.
+#
+
+DEF MOLECULE  benx  BENX
+DEF MOLECULE  prpx  PRPX
+DEF MOLECULE  aald  AALD
+DEF MOLECULE  meoh  MEOH
+DEF MOLECULE  form  FORM
+DEF MOLECULE  imia  IMIA
+DEF MOLECULE  acey  ACEY
+DEF MOLECULE  mamy  MAMY
+
+
+DEF SELECTION benc   BENX  CG CD1 CD2 CE1 CE2 CZ
+DEF SELECTION prpc   PRPX  C1 C2 C3
+DEF SELECTION aalc   AALD  C
+DEF SELECTION aalo   AALD  O
+DEF SELECTION meoh   MEOH  HG1
+DEF SELECTION meoo   MEOH  OG
+DEF SELECTION meooh  MEOH  OG HG1
+DEF SELECTION forh   FORM  HC HT
+DEF SELECTION forn   FORM  N
+DEF SELECTION fornh  FORM  N HC HT
+DEF SELECTION foro   FORM  O
+DEF SELECTION imih   IMIA  HD1
+DEF SELECTION imin   IMIA  NE2
+DEF SELECTION iminh  IMIA  ND1
+DEF SELECTION iminhh IMIA  ND1 HD1
+DEF SELECTION gehc   IMIA  CE1 CG CD2
+DEF SELECTION acec   ACEY  C2
+DEF SELECTION aceo   ACEY  O1 O2
+DEF SELECTION mamh   MAMY  HZ1 HZ2 HZ3
+DEF SELECTION mamc   MAMY  CE
+DEF SELECTION mamn   MAMY  NZ
+DEF SELECTION mamnh  MAMY  NZ HZ1 HZ2 HZ3
+
+DEF SELECTION tiph   SOL   HW1 HW2
+DEF SELECTION tipo   SOL   OW
+
+
+## new fragmaps that include OH and NH groups as hbond donors ##
+#  gromacs treats O+N as acceptors and OH+NH as donors for     #
+#  its hbond analysis, so we need these if we want to use gmx  #
+#  to calculate hbonds over trajectories                       #
+DEF FRAGMAP hbacc  meoo  foro  aalo   imin
+DEF FRAGMAP hbdon  meooh fornh iminhh
+DEF FRAGMAP apolar benc  prpc
+DEF FRAGMAP nhbacc aceo
+DEF FRAGMAP phbdon mamnh

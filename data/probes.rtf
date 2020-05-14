@@ -1,0 +1,25 @@
+* test probe
+*
+36  1
+
+!    num  ID        mass
+MASS  -1  X1C       12.01100 !
+MASS  -1  X1N       14.00700 !
+MASS  -1  X1O       15.99900 !
+
+! carbon-like hydrophobic residue
+RESI XRC          0.00
+ATOM X1C  X1C     0.00
+PATCHING FIRS NONE LAST NONE
+
+! nitrogen-like charged donor residue
+RESI XRN          1.00
+ATOM X1N  X1N     1.00
+PATCHING FIRS NONE LAST NONE
+
+! oxygen-like charged acceptor residue
+RESI XRO         -1.00
+ATOM X1O  X1O    -1.00
+PATCHING FIRS NONE LAST NONE
+
+END

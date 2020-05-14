@@ -1,0 +1,56 @@
+####  DEFINITION FILE FOR PROTEIN SIDECHAIN INTERACTORS  ####
+#
+# This file defines standard amino-acid sidechain interacing
+# groups. It follows a standard format with the following
+# entries:
+#
+# INTTYPE  RESNAME  ATOM1 [ATOM2...]
+#
+# Where INTTYPE is one of HBACC, HBDON, APOLAR, for hbond
+# acceptor, hbond donor or apolar contact atom, respectively
+#
+# RESNAME is the 3-letter residue ID, and the list of atoms
+# specifies which atoms contribute to the INTTYPE of
+# interaction. Note that HBDON interactions should include
+# both the donor O or N and its participating protons.
+# HBACC should only include the acceptor O or N. This is
+# for compatibility with gromacs hbond
+#
+
+
+HBACC  ASN  OD1
+HBACC  ASP  OD1 OD2
+HBACC  GLN  OE1
+HBACC  GLU  OE1 OE2
+HBACC  HIS  ND1 NE2
+HBACC  HSD  NE2
+HBACC  HSE  ND1
+HBACC  SER  OG
+HBACC  THR  OG1
+HBACC  TYR  OH
+
+
+HBDON  ARG  NE NH1 NH2 HE HH11 HH12 HH21 HH22
+HBDON  ASN  ND2 HD21 HD22
+HBDON  GLN  NE2 HE21 HE22
+HBDON  HSD  ND1 HD1
+HBDON  HSE  NE2 HE2
+HBDON  HSP  ND1 NE2 HD1 HE2
+HBDON  LYS  NZ HZ1 HZ2 HZ3
+HBDON  SER  OG HG1
+HBDON  THR  OG1 HG1
+HBDON  TRP  NE1 HE1
+HBDON  TYR  OH HH
+
+
+APOLAR ALA  CB
+APOLAR CYS  SG
+APOLAR ILE  CB CG1 CG2 CD
+APOLAR LEU  CB CG CD1 CD2
+APOLAR MET  CB CG SD CE
+APOLAR PHE  CB CG CD1 CD2 CE1 CE2 CZ
+APOLAR PRO  CB CG CD
+APOLAR TRP  CB CG CD1 CE2 CD2 CE3 CZ3 CZ2 CH2
+APOLAR TYR  CB CG CD1 CD2 CE1 CE2 CZ
+APOLAR VAL  CB CG1 CG2
+APOLAR GLY  CA

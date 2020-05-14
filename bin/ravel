@@ -114,7 +114,6 @@ if __name__ == '__main__':
                       seqtrefname=None,
                       phymodel='LG+G8+F',
                       consensus=80)
-
     # smodel subparser
     smodelp = subparsers.add_parser('smodel', help='model structures',
                          formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -146,6 +145,13 @@ if __name__ == '__main__':
                          probcutoff=0.2,
                          nmodels=20,
                          refstructure=None)
+    # qmap subparser
+    qmapp = subparsers.add_parser('qmap', help='quick structural energy map',
+                       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    qmapp.add_argument('-d', '--datadir', dest='datadir',
+                       help='set structural data location to NAME',
+                       metavar='NAME')
+    qmapp.set_defaults(datadir='ravel-smodels')
 
     # parse general arguments
     args = parser.parse_args()
@@ -240,6 +246,13 @@ if __name__ == '__main__':
                     replicates=replicates, nmodels=nmodels,
                     probcutoff=probcutoff, refstructure=refstructure,
                     threads=n_threads, verbose=verbose)
+
+    elif subcommand == 'qmap':
+        # set up quick structural energetic mapping
+        datadir = args.datadir
+        if datadir[-1] == os.path.sep:
+            datadir = datadir[:-1]
+        
 
 
     sys.exit(0)
