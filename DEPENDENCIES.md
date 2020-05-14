@@ -37,7 +37,7 @@ Mafft is a multiple-sequence alignment method. ProteinRavel doesn't use mafft to
 
 The "mafft" executable must be in your executable PATH.
 
-## raxml-ng (coarse)
+### raxml-ng (coarse)
 
   "raxml-ng": "^0.9.0coarse"
 
