@@ -21,8 +21,13 @@ Dendropy is a Python3 package for reading, manipulating and writing phylogenetic
 
 ## Third-party Programs
 
-  mafft >= v7.453 (2019/Nov/8)
-  raxml-ng >= 0.9.0coarse
-  gromacs >= v2020.1
-  charmm >= 44b2
-  pdb2pqr >= 2.1.1
+  "mafft": "^v7.453"
+
+  "raxml-ng": "^0.9.0coarse"
+
+  "gromacs": "^v2020.1"
+
+  "charmm": "^44b2"
+
+  "pdb2pqr": "^2.1.1"
+  
