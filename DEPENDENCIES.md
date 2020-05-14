@@ -6,11 +6,15 @@ To run ProteinRavel analyses, you will need the following Python3 packages and t
 
 ## Python3 Packages
 
+### modeller
+
   "modeller": "^9.24"
 
 Modeller is a Python3 language interface to build structural models of protein sequences using structural homology modeling. Modeller is available free of charge for academic or research use. Documentation and package downloads are available at the [Modeller website]. ProteinRavel uses modeller to build structural models of ancestral and extant protein sequences.
 
 [Modeller website]: https://salilab.org/modeller/
+
+### dendropy
 
   "dendropy": "^4.4.0"
 
@@ -23,6 +27,8 @@ Dendropy is a Python3 package for reading, manipulating and writing phylogenetic
 
 Some of the third-party programs required to run ProteinRavel may be available as binary packages for your operating system, which is probably the easiest way to install and configure them. Once installed, please make sure that the required executables are in your executable PATH, before attempting to run any ProteinRavel analyses.
 
+### mafft
+
   "mafft": "^v7.453"
 
 Mafft is a multiple-sequence alignment method. ProteinRavel doesn't use mafft to align protein sequences directly, but it does use mafft to align protein sequences to a structural alignment built by Modeller, leveraging the structural alignment to guide the placement of insertions and deletions. Mafft is available free of charge. Documentation and downloads are available at the [Mafft website].
@@ -30,6 +36,8 @@ Mafft is a multiple-sequence alignment method. ProteinRavel doesn't use mafft to
 [Mafft website]: https://mafft.cbrc.jp/alignment/software/
 
 The "mafft" executable must be in your executable PATH.
+
+## raxml-ng (coarse)
 
   "raxml-ng": "^0.9.0coarse"
 
@@ -40,6 +48,8 @@ Note that ProteinRavel makes use of coarse-grained parallelism in raxml-ng, whic
 [raxml-ng github repository]: https://github.com/amkozlov/raxml-ng
 
 The "raxml-ng" executable must be in your executable PATH.
+
+### gromacs
 
   "gromacs": "^v2020.1"
 
@@ -52,6 +62,8 @@ Although gromacs can utilize GPU resources during molecular dynamics runs, Prote
 
 The "gmx" executable must be in your executable PATH.
 
+### charmm
+
   "charmm": "^44b2"
 
 Charmm is a software package for performing molecular dynamics and similar structural analyses. ProteinRavel uses charmm to calculate potential energy fields around a protein structure using an implicit solvent model. Charmm is available free of charge (as "charmm"; there is also a paid version, but this is not needed for ProteinRavel). Documentation and downloads are available at the [Charmm website].
@@ -62,12 +74,13 @@ Although charmm can utilize GPU resources during molecular dynamics runs, Protei
 
 The "charmm" executable must be in your executable PATH.
 
+### pdb2pqr
+
   "pdb2pqr": "^2.1.1"
 
 Pdb2pqr is an application that assigns hydrogen atoms to protein structures at a specified pH, optimizes amino-acid side-chain orientations and assigns charge+radius information based on a specified atomic force-field. ProteinRavel uses pdb2pqr for structure preparation prior to potential-energy field calculations. Pdb2pqr is available free of charge. Documentation and downloads are available at the [APBS-PDB2PQR website]. Pdb2pqr is also available at the [APBS-PDB2PQR github repository].
 
 [ABPS-PDB2PQR website]: http://www.poissonboltzmann.org/
 [APBS-PDB2PQR github repository]: https://github.com/Electrostatics/apbs-pdb2pqr
-
 
 The "pdb2pqr" executable must be in your executable PATH.
