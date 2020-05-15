@@ -80,7 +80,7 @@ The "charmm" executable must be in your executable PATH.
 
 Pdb2pqr is an application that assigns hydrogen atoms to protein structures at a specified pH, optimizes amino-acid side-chain orientations and assigns charge+radius information based on a specified atomic force-field. ProteinRavel uses pdb2pqr for structure preparation prior to potential-energy field calculations. Pdb2pqr is available free of charge. Documentation and downloads are available at the [APBS-PDB2PQR website]. Pdb2pqr is also available at the [APBS-PDB2PQR github repository].
 
-[ABPS-PDB2PQR website]: http://www.poissonboltzmann.org/
+[APBS-PDB2PQR website]: http://www.poissonboltzmann.org/
 [APBS-PDB2PQR github repository]: https://github.com/Electrostatics/apbs-pdb2pqr
 
 The "pdb2pqr" executable must be in your executable PATH.
